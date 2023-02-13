@@ -10,8 +10,8 @@ import java.util.stream.Stream;
 
 public enum XxlJobGroupEnum {
 
-    TEST("auto_executor1","第一个执行器",0,""),
-    TEST2("auto_executor2","第二个执行器",0,"");
+    TEST("auto_executor1", "第一个执行器", 0, ""),
+    TEST2("auto_executor2", "第二个执行器", 0, "");
 
     private String appName;
     private String groupDesc;
@@ -19,24 +19,22 @@ public enum XxlJobGroupEnum {
     private String addressList;// 执行器地址列表，多地址逗号分割，addressType=1时，才需要配置
 
 
-    public static List<XxlJobGroup> getJobGroup(){
-        return Stream.of(XxlJobGroupEnum.values()).map(a->{
-                XxlJobGroup vo = new XxlJobGroup();
-                vo.setAppname(a.appName);
-                vo.setTitle(a.groupDesc);
-                vo.setAddressType(a.addressType);
-                vo.setAddressList(a.addressList);
-                return vo;
-                }).collect(Collectors.toList());
-    }
-
-
-
     XxlJobGroupEnum(String appName, String groupDesc, Integer addressType, String addressList) {
         this.appName = appName;
         this.groupDesc = groupDesc;
         this.addressType = addressType;
         this.addressList = addressList;
+    }
+
+    public static List<XxlJobGroup> getJobGroup() {
+        return Stream.of(XxlJobGroupEnum.values()).map(a -> {
+            XxlJobGroup vo = new XxlJobGroup();
+            vo.setAppname(a.appName);
+            vo.setTitle(a.groupDesc);
+            vo.setAddressType(a.addressType);
+            vo.setAddressList(a.addressList);
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     public String getAppName() {

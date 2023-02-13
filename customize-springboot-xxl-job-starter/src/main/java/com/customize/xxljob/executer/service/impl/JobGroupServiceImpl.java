@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -70,7 +71,11 @@ public class JobGroupServiceImpl implements JobGroupService {
                 AdminBiz adminBiz = new AdminBizClient(adminAddresses, "default_token");
 
                 String ip = IpUtil.getIp();
-                String registryValue = ip + ":" + port;
+                String ip_port_address = IpUtil.getIpPort(ip, port);
+                // registry-address：default use address to registry , otherwise use ip:port if address is null
+                String registryValue = "http://{ip_port}/".replace("{ip_port}", ip_port_address);
+
+                //注册进去的地址 需要携带 http
                 RegistryParam registryParam = new RegistryParam(RegistryConfig.RegistType.EXECUTOR.name(), group.getAppname(), registryValue);
                 ReturnT<String> returnT = adminBiz.registry(registryParam);
                 if (returnT.getCode() == HttpStatus.HTTP_OK) {
