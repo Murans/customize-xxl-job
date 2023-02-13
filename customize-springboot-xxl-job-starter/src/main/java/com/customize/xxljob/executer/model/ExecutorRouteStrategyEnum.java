@@ -1,15 +1,6 @@
 package com.customize.xxljob.executer.model;
 
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteBusyover;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteConsistentHash;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteFailover;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteFirst;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteLFU;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteLRU;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteLast;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteRandom;
-import com.xxl.job.admin.core.route.strategy.ExecutorRouteRound;
-import com.xxl.job.admin.core.util.I18nUtil;
+
 
 
 /**

@@ -4,6 +4,7 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import cn.hutool.http.HttpStatus;
 import cn.hutool.json.JSON;
 import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
@@ -42,13 +43,17 @@ public class JobInfoServiceImpl implements JobInfoService {
                 .cookie(jobLoginService.getCookie())
                 .execute();
 
-        String body = response.body();
-        JSONArray array = JSONUtil.parse(body).getByPath("data", JSONArray.class);
-        List<XxlJobInfo> list = array.stream()
-                .map(o -> JSONUtil.toBean((JSONObject) o, XxlJobInfo.class))
-                .collect(Collectors.toList());
+        if (response.getStatus() == HttpStatus.HTTP_OK) {
+            String body = response.body();
+            JSONArray array = JSONUtil.parse(body).getByPath("data", JSONArray.class);
+            List<XxlJobInfo> listData = array.stream()
+                    .map(o -> JSONUtil.toBean((JSONObject) o, XxlJobInfo.class))
+                    .collect(Collectors.toList());
 
-        return list;
+            return listData;
+        } else {
+            throw new RuntimeException("get jobInfo error!");
+        }
     }
 
     @Override
@@ -60,12 +65,16 @@ public class JobInfoServiceImpl implements JobInfoService {
                 .cookie(jobLoginService.getCookie())
                 .execute();
 
-        JSON json = JSONUtil.parse(response.body());
-        Object code = json.getByPath("code");
-        if (code.equals(200)) {
-            return Convert.toInt(json.getByPath("content"));
+        if (response.getStatus() == HttpStatus.HTTP_OK) {
+            JSON json = JSONUtil.parse(response.body());
+            Object code = json.getByPath("code");
+            if (code.equals(200)) {
+                return Convert.toInt(json.getByPath("content"));
+            }
+        } else {
+            throw new RuntimeException("add jobInfo error!");
         }
-        throw new RuntimeException("add jobInfo error!");
+        return null;
     }
 
 }
