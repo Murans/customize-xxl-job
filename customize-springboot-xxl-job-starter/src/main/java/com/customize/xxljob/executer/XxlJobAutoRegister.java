@@ -63,7 +63,13 @@ public class XxlJobAutoRegister implements ApplicationListener<ApplicationReadyE
         addJobInfo();
     }
 
-    //自动注册执行器(创建)
+    /**
+     * 服务启动 扫描@XxlJob @AutoRegisterJob 注解
+     * 实现自动注册任务及,自动添加执行器
+     *
+     * @author zhangxu
+     * @date 2023/2/13
+     */
     private void addJobInfo() {
 
         Set<XxlJobGroup> xxlJobGroups = jobGroupService.autoCheckAndRegisterGroup(listGroup);
@@ -82,6 +88,7 @@ public class XxlJobAutoRegister implements ApplicationListener<ApplicationReadyE
                             return AnnotatedElementUtils.findMergedAnnotation(method, XxlJob.class);
                         }
                     });
+            //扫描@XxlJob 方法,进行判断 job任务
             for (Map.Entry<Method, XxlJob> methodXxlJobEntry : annotatedMethods.entrySet()) {
                 Method executeMethod = methodXxlJobEntry.getKey();
                 XxlJob xxlJob = methodXxlJobEntry.getValue();
