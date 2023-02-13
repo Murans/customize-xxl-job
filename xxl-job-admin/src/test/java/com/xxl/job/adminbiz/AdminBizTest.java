@@ -42,7 +42,7 @@ public class AdminBizTest {
     }
 
     /**
-     * registry executor
+     * registry executor , 注册执行器
      *
      * @throws Exception
      */
