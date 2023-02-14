@@ -21,8 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -49,12 +49,13 @@ public class JobGroupServiceImpl implements JobGroupService {
      */
     @Override
     public void initJobGroup() {
-        String url = adminAddresses + "/jobgroup/pageList";
+        String address = Arrays.stream(adminAddresses.split(",")).findFirst().get();
+        String url = address + "/jobgroup/pageList";
 
         HttpResponse response = HttpRequest.post(url)
                 .form("start", "0")
                 .form("length", Integer.MAX_VALUE)
-                .cookie(jobLoginService.getCookie())
+                .cookie(jobLoginService.getCookie(address))
                 .execute();
 
         if (response.getStatus() == HttpStatus.HTTP_OK) {
@@ -68,7 +69,7 @@ public class JobGroupServiceImpl implements JobGroupService {
 
             //遍历执行器组集合，注册到xxl-job-admin,
             listGroup.stream().collect(Collectors.toSet()).forEach(group -> {
-                AdminBiz adminBiz = new AdminBizClient(adminAddresses, "default_token");
+                AdminBiz adminBiz = new AdminBizClient(address, "default_token");
 
                 String ip = IpUtil.getIp();
                 String ip_port_address = IpUtil.getIpPort(ip, port);
@@ -119,14 +120,15 @@ public class JobGroupServiceImpl implements JobGroupService {
             }
         }
         if (CollectionUtil.isNotEmpty(autoRegisterList)) {
+            String address = Arrays.stream(adminAddresses.split(",")).findFirst().get();
             //遍历待自动注册的执行器，自动注册
             for (XxlJobGroup a : autoRegisterList) {
-                HttpResponse response = HttpRequest.post(adminAddresses + "/jobgroup/save")
+                HttpResponse response = HttpRequest.post(address + "/jobgroup/save")
                         .form("appname", a.getAppname())
                         .form("title", a.getTitle())
                         .form("addressType", a.getAddressType())
                         .form("addressList", a.getRegistryList())
-                        .cookie(jobLoginService.getCookie())
+                        .cookie(jobLoginService.getCookie(address))
                         .execute();
 
                 if (response.getStatus() == HttpStatus.HTTP_OK) {

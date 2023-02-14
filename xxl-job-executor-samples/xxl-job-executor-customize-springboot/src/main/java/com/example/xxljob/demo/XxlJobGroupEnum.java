@@ -10,8 +10,8 @@ import java.util.stream.Stream;
 
 public enum XxlJobGroupEnum {
 
-    TEST("auto_executor1", "第一个执行器", 0, ""),
-    TEST2("auto_executor2", "第二个执行器", 0, "");
+    TEST("auto_executor1", "自动_第一个执行器", 0, ""),
+    TEST2("auto_executor2", "自动_第二个执行器", 0, "");
 
     private String appName;
     private String groupDesc;

@@ -1,6 +1,8 @@
 package com.customize.xxljob.executer.service;
 
 
+import java.util.Map;
+
 /**
  * job登录 及获取cookie
  *
@@ -16,15 +18,19 @@ public interface JobLoginService {
      * @author zhangxu
      * @date 2023/2/13
      */
-    String loginAndGetCookie();
+    Map<String,String> loginAndGetCookie();
 
+
+
+    String loginAndGetCookie(String address);
     /**
      * 获取 cookie
      *
      * @return
      * @author zhangxu
      * @date 2023/2/13
+     * @param address
      */
-    String getCookie();
+    String getCookie(String address);
 
 }

@@ -12,14 +12,17 @@ import cn.hutool.json.JSONUtil;
 import com.customize.xxljob.executer.model.XxlJobInfo;
 import com.customize.xxljob.executer.service.JobInfoService;
 import com.customize.xxljob.executer.service.JobLoginService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class JobInfoServiceImpl implements JobInfoService {
 
@@ -31,8 +34,8 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     @Override
     public List<XxlJobInfo> getJobInfo(Integer jobGroupId, String executorHandler, String jobDesc) {
-        String jobListUrl = adminAddresses + "/jobinfo/pageList";
-
+        String address = Arrays.stream(adminAddresses.split(",")).findFirst().get();
+        String jobListUrl = address + "/jobinfo/pageList";
         HttpResponse response = HttpRequest.post(jobListUrl)
                 .form("jobGroup", jobGroupId)
                 .form("executorHandler", executorHandler)
@@ -40,7 +43,7 @@ public class JobInfoServiceImpl implements JobInfoService {
                 .form("triggerStatus", -1)
                 .form("start", 0)
                 .form("length", Integer.MAX_VALUE)
-                .cookie(jobLoginService.getCookie())
+                .cookie(jobLoginService.getCookie(address))
                 .execute();
 
         if (response.getStatus() == HttpStatus.HTTP_OK) {
@@ -58,20 +61,24 @@ public class JobInfoServiceImpl implements JobInfoService {
 
     @Override
     public Integer addJobInfo(XxlJobInfo xxlJobInfo) {
-        String url = adminAddresses + "/jobinfo/add";
+        String address = Arrays.stream(adminAddresses.split(",")).findFirst().get();
+        String url = address + "/jobinfo/add";
         Map<String, Object> paramMap = BeanUtil.beanToMap(xxlJobInfo);
         HttpResponse response = HttpRequest.post(url)
                 .form(paramMap)
-                .cookie(jobLoginService.getCookie())
+                .cookie(jobLoginService.getCookie(address))
                 .execute();
 
         if (response.getStatus() == HttpStatus.HTTP_OK) {
             JSON json = JSONUtil.parse(response.body());
             Object code = json.getByPath("code");
-            if (code.equals(200)) {
+            if (code.equals(HttpStatus.HTTP_OK)) {
                 return Convert.toInt(json.getByPath("content"));
+            }else {
+                log.error("add jobInfo error! url:{}, response:{}", url,response.body());
             }
         } else {
+            log.error("add jobInfo error! url:{}, response:{}", url,response.body());
             throw new RuntimeException("add jobInfo error!");
         }
         return null;

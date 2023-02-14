@@ -3,14 +3,18 @@ package com.customize.xxljob.executer;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.customize.xxljob.executer.annotation.AutoRegisterJob;
+import com.customize.xxljob.executer.constant.XxlJobConstant;
 import com.customize.xxljob.executer.model.XxlJobGroup;
 import com.customize.xxljob.executer.model.XxlJobInfo;
 import com.customize.xxljob.executer.service.JobGroupService;
 import com.customize.xxljob.executer.service.JobInfoService;
+import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
+import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.Setter;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -31,7 +35,8 @@ public class XxlJobAutoRegister implements ApplicationListener<ApplicationReadyE
 
     //需创建的任务集合
     private static final List<XxlJobInfo> executeJobList = new ArrayList<>();
-
+    @Value("${xxl.job.executor.appname:}")
+    private String executorAppname;
     private ApplicationContext applicationContext;
 
     /**
@@ -96,33 +101,38 @@ public class XxlJobAutoRegister implements ApplicationListener<ApplicationReadyE
                 //自动注册
                 if (executeMethod.isAnnotationPresent(AutoRegisterJob.class)) {
                     AutoRegisterJob autoRegister = executeMethod.getAnnotation(AutoRegisterJob.class);
-                    List<XxlJobInfo> collect = listJobInfo.stream().filter(a ->
-                            a.getExecutorHandler().equals(xxlJob.value())).collect(Collectors.toList());
-                    if (CollectionUtil.isEmpty(collect)) {
-                        throw new RuntimeException("auto register job tasks is null!");
-                    } else if (collect.size() > 1) {
-                        throw new RuntimeException("auto register job tasks  is repeat！");
-                    }
-                    XxlJobInfo info = collect.get(0);
-                    Integer jobGroupId = getJobGroupId(autoRegister, xxlJobGroups);
-                    info.setJobGroup(jobGroupId);
-                    info.setScheduleType("CRON");
-                    info.setScheduleConf(autoRegister.cron());
-                    info.setChildJobId(autoRegister.childJob());
-                    info.setAuthor(autoRegister.author());
-                    info.setExecutorRouteStrategy(autoRegister.route().getStrategy());
-                    //校验该任务是否手动配置过
-                    List<XxlJobInfo> jobInfo = jobInfoService.getJobInfo(jobGroupId, xxlJob.value(), info.getJobDesc());
-                    if (!jobInfo.isEmpty()) {
-                        //因为是模糊查询，需要再判断一次
-                        Optional<XxlJobInfo> first = jobInfo.stream()
-                                .filter(xxlJobInfo -> xxlJobInfo.getExecutorHandler().equals(xxlJob.value()))
-                                .findFirst();
-                        if (first.isPresent()) {
-                            continue;
+
+                    //过滤掉配置的执行器,获取执行器id
+                    Set<Integer> executorIds = xxlJobGroups.stream().filter(e -> e.getAppname().equals(executorAppname))
+                            .map(XxlJobGroup::getId).collect(Collectors.toSet());
+
+                    executorIds.stream().forEach(jobGroupId -> {
+                        if (autoRegister.registerType().equals(XxlJobConstant.JOB_REGISTER_AUTO)) {
+                            XxlJobInfo info = new XxlJobInfo();
+
+                            info.setJobGroup(jobGroupId);
+                            info.setExecutorHandler(autoRegister.executorHandler());
+                            info.setJobDesc(autoRegister.jobDesc());
+                            info.setScheduleType(autoRegister.scheduleType());
+                            info.setScheduleConf(autoRegister.cron());
+                            info.setChildJobId(autoRegister.childJob());
+                            info.setAuthor(autoRegister.author());
+                            info.setExecutorParam(autoRegister.executorParam());
+                            info.setExecutorRouteStrategy(autoRegister.route().getStrategy());
+                            info.setGlueType(GlueTypeEnum.BEAN.getDesc());
+                            info.setMisfireStrategy(XxlJobConstant.SCHEDULE_MISFIRE_DO_NOTHING);
+                            info.setExecutorBlockStrategy(autoRegister.executorBlockStrategy());
+
+                            info.setTriggerStatus(0);
+                            //校验该任务是否手动配置过
+                            List<XxlJobInfo> jobInfoList = jobInfoService.getJobInfo(jobGroupId, info.getExecutorHandler(), info.getJobDesc());
+                            if (CollectionUtil.isEmpty(jobInfoList)) {
+                                executeJobList.add(info);
+                            }
+
                         }
-                    }
-                    executeJobList.add(info);
+                    });
+
                 }
             }
         }
@@ -165,20 +175,6 @@ public class XxlJobAutoRegister implements ApplicationListener<ApplicationReadyE
                 return id;
             }
         }
-    }
-
-    /**
-     * 获取执行器 id
-     *
-     * @author zhangxu
-     * @date 2023/2/13
-     */
-    private Integer getJobGroupId(AutoRegisterJob autoRegister, Set<XxlJobGroup> xxlJobGroups) {
-        XxlJobGroup xxlJobGroup = xxlJobGroups.stream().filter(a -> a.getTitle().equals(autoRegister.groupDesc())
-                && a.getAppname().equals(autoRegister.appName())).findFirst().get();
-
-        return xxlJobGroup.getId();
-
     }
 
 

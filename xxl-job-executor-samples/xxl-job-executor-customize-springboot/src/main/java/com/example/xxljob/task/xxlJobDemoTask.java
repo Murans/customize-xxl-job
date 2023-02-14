@@ -1,6 +1,7 @@
 package com.example.xxljob.task;
 
 import com.customize.xxljob.executer.annotation.AutoRegisterJob;
+import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.springframework.stereotype.Component;
 
@@ -11,21 +12,21 @@ import org.springframework.stereotype.Component;
 @Component
 public class xxlJobDemoTask {
 
-    @AutoRegisterJob(appName = "auto_executor1",groupDesc = "第一个执行器",cron="* * * * * ?")
+    @AutoRegisterJob(executorHandler = "xxlJob1", jobDesc = "测试任务1", cron = "* * * * * ?")
     @XxlJob("xxlJob1")
     public void demoTask1() {
-        System.out.println("xxl-job xxlJob1");
+        long jobId = XxlJobHelper.getJobId();
+        System.out.println("xxl-job xxlJob1  jobId=" + jobId   );
     }
 
-    @AutoRegisterJob(appName = "auto_executor2",groupDesc = "第二个执行器",cron="* * * * * ?")
+    @AutoRegisterJob(executorHandler = "xxlJob2", jobDesc = "测试任务2", cron = "* * * * * ?")
     @XxlJob("xxlJob2")
     public void demoTask2() {
         System.out.println("xxl-job xxlJob2");
     }
 
 
-
-    @XxlJob("xxlJob3")
+    @AutoRegisterJob(executorHandler = "xxlJob3", jobDesc = "测试任务3", cron = "* * * * * ?")
     public void demoTask3() {
         System.out.println("xxl-job xxlJob3");
     }
